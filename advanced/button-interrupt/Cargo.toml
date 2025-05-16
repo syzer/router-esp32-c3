@@ -24,6 +24,7 @@ opt-level = "z"
 anyhow      = "=1.0.95"
 esp-idf-svc = "=0.50.1"
 rgb-led     = { path = "../../common/lib/rgb-led" }
+getrandom = "0.2"          # nothing extra needed
 
 [build-dependencies]
 embuild = "=0.33.0"

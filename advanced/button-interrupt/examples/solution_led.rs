@@ -1,4 +1,5 @@
 use anyhow::Result;
+use anyhow::anyhow;
 use esp_idf_svc::{
     hal::{
         gpio::{InterruptType, PinDriver, Pull},
@@ -9,6 +10,8 @@ use esp_idf_svc::{
 };
 use rgb_led::{RGB8, WS2812RMT};
 use std::num::NonZeroU32;
+use getrandom::getrandom;
+// use esp_idf_svc::hal::rmt::WS2812RMT;
 
 fn main() -> Result<()> {
     esp_idf_svc::sys::link_patches();
@@ -51,17 +54,19 @@ fn main() -> Result<()> {
 }
 
 #[allow(unused)]
-// ANCHOR: random_light
-fn random_light(led: &mut WS2812RMT) {
-    let mut color = RGB8::new(0, 0, 0);
-    unsafe {
-        let r = esp_random() as u8;
-        let g = esp_random() as u8;
-        let b = esp_random() as u8;
-
-        color = RGB8::new(r, g, b);
+pub fn random_light(led: &mut WS2812RMT) -> Result<()> {
+    // Fill a 3-byte buffer with random data
+    let mut buf = [0u8; 3];
+    if let Err(e) = getrandom(&mut buf) {
+        return Err(anyhow!("RNG failed: {:?}", e));
     }
 
-    led.set_pixel(color).unwrap();
+    let colour = RGB8::new(buf[0], buf[1], buf[2]);
+
+    // Push colour to the LED
+    if let Err(e) = led.set_pixel(colour) {
+        return Err(anyhow!("LED write error: {:?}", e));
+    }
+
+    Ok(())
 }
-// ANCHOR_END: random_light
