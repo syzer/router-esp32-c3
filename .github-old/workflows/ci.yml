@@ -7,13 +7,13 @@ on:
       - "book/"
       - "book/**"
       - "**/README.md"
-      - ".github/workflows/wokwi_projects.yml"
+      - "../workflows/wokwi_projects.yml"
   pull_request:
     paths-ignore:
       - "book/"
       - "book/**"
       - "**/README.md"
-      - ".github/workflows/wokwi_projects.yml"
+      - "../workflows/wokwi_projects.yml"
   schedule:
     - cron: "50 7 * * *"
 
@@ -76,5 +76,5 @@ jobs:
           token: ${{ secrets.WOKWI_CLI_TOKEN }}
           path: ${{ matrix.project.path }}
           timeout: 30000
-          scenario: ${{ github.workspace }}/.github/${{ matrix.project.name }}.test.yaml
+          scenario: ${{ github.workspace }}/.github-old/${{ matrix.project.name }}.test.yaml
           fail_text: 'Error'

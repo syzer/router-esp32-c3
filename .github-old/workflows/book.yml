@@ -5,13 +5,13 @@ on:
     paths:
       - "book/"
       - "book/**"
-      - ".github/workflows/book.yml"
+      - "../workflows/book.yml"
       - "**book**"
   pull_request:
     paths:
       - "book/"
       - "book/**"
-      - ".github/workflows/book.yml"
+      - "../workflows/book.yml"
       - "**book**"
 
 env:
