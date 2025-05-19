@@ -1,0 +1,9 @@
+[workspace]                 # optional; sets the task Bacon starts by default
+default_task = "ap-run"
+
+[tasks.ap-run]              # you can pick any name
+command = [
+    "cargo", "run",
+    "--example", "AP",
+#    "--target", "riscv32imac-esp-espidf",
+]
