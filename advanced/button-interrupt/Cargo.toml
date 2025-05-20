@@ -23,7 +23,7 @@ opt-level = "z"
 
 [dependencies]
 anyhow      = "=1.0.95"
-esp-idf-svc = "=0.50.1"
+esp-idf-svc = { version = "0.51", features = ["std"] }
 rgb-led     = { path = "../../common/lib/rgb-led" }
 getrandom = "0.2"
 heapless = "0.8.0"

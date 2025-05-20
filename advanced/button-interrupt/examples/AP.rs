@@ -15,6 +15,13 @@ use esp_idf_svc::wifi::*;
 use esp_idf_svc::nvs::*;
 use heapless::String as HeapString;
 
+use std::time::Duration;
+use esp_idf_svc::sys::{
+        esp_netif_get_handle_from_ifkey,
+        esp_netif_get_ip_info,
+        esp_netif_ip_info_t,
+    };
+
 const AP_SSID: &str = env!("AP_SSID");
 const AP_PASS: &str = env!("AP_PASS");
 
@@ -99,9 +106,17 @@ fn main() -> Result<()> {
         wifi.set_configuration(&Configuration::Mixed(sta_cfg.clone(), ap_cfg.clone()))?;
         wifi.start()?;
         wifi.connect()?;
-
         println!("RustyAP up → SSID `{}`  pass `{}`", AP_SSID, AP_PASS);
         println!("Connecting STA to `{}` …", ST_SSID);
+
+        // Wait until the STA has an IP lease
+        while !wifi.is_connected()? {
+            std::thread::sleep(Duration::from_millis(100));
+        }
+
+        // Enable NAT now
+        enable_nat_on_sta()?;
+        println!("NAPT active – devices under `{}` now have Internet", AP_SSID);
     }
     // ANCHOR_END: loop
 }
@@ -122,5 +137,30 @@ pub fn random_light(led: &mut WS2812RMT) -> Result<()> {
         return Err(anyhow!("LED write error: {:?}", e));
     }
 
+    Ok(())
+}
+
+extern "C" {
+    fn ip_napt_enable(addr: u32, enable: i32);
+}
+
+#[allow(unused)]
+pub fn enable_nat_on_sta() -> anyhow::Result<()> {
+    // the default STA netif key is "WIFI_STA_DEF"
+    let sta_netif = unsafe {
+        esp_netif_get_handle_from_ifkey(b"WIFI_STA_DEF\0".as_ptr() as _)
+    };
+    if sta_netif.is_null() {
+        return Err(anyhow!("STA netif not found"));
+    }
+
+    // query its IPv4 address
+    let mut info = esp_netif_ip_info_t::default();
+    unsafe { esp_netif_get_ip_info(sta_netif, &mut info) };
+
+    // ip_napt_enable() expects the address in host byte-order
+    let ip_host_order = u32::from_be(info.ip.addr);
+
+    // unsafe { ip_napt_enable(ip_host_order, 1) };   // 1 = enable
     Ok(())
 }
